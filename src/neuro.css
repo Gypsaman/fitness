@@ -101,13 +101,11 @@ button[disabled=disabled], button:disabled
 }
 
 .neuro-navbar {
-
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   justify-content: space-between;
-  padding-left: 100px;
-  padding-right: 100px;
+  padding: 0 1rem; /* Use responsive padding instead of fixed 100px */
   background-color: #00002F;
 }
 .neuro-navbar .nav {
@@ -412,4 +410,20 @@ input,textarea {
 .neuro-dashboard-content-section h1 {
   color: #AE6222;
   font-size: 47px;
+}
+@media (max-width: 768px) {
+  .neuro-navbar {
+    padding: 0 10px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .neuro-navbar .nav {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .neuro-navbar .navbar-brand {
+    margin: 0 auto;
+  }
 }
