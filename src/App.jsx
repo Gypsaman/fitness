@@ -28,7 +28,7 @@ function App(){
                     <Route path="/" element={<HomePage/>} />
                     <Route path="/create" element={<WorkoutCreator />} />
                     <Route path="/workout-view/:WorkOutId" element={<WorkoutView />} />
-                    {/* <Route path="/edit-reps/:workoutId/:equipmentId" element={<EditReps />} /> */}
+                    <Route path="/edit-reps/:workoutId/:equipmentId" element={<EditReps />} />
                     <Route path="/view-equipment" element={<EquipmentViewer />} />
                     <Route path="/api_url" element={<APIViewer />} />
                     <Route path="/workouts" element={<Workouts />} />

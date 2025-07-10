@@ -1,54 +1,57 @@
-import React, { useEffect, useState } from 'react';
-import API_BASE_URL from '../api';
+import React, { useEffect, useState } from "react";
+import API_BASE_URL from "../api";
 
 const WorkoutCreator = () => {
   const [muscleGroups, setMuscleGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [isBlank, setIsBlank] = useState(true);
   const [workoutDate, setWorkoutDate] = useState(() => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     return today;
   });
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/muscle-groups`)
-      .then(response => {
+      .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to fetch muscle groups');
+          throw new Error("Failed to fetch muscle groups");
         }
         return response.json();
       })
-      .then(data => setMuscleGroups(data));
+      .then((data) => setMuscleGroups(data));
   }, []);
 
   const createWorkout = () => {
+    const selectedGroupObj = muscleGroups.find(
+      (g) => g.id === parseInt(selectedGroup)
+    );
     const workoutData = {
       workout_date: workoutDate,
       muscle_group_id: parseInt(selectedGroup),
-      description: 'Auto-created workout',
-      comments: ''
+      description: selectedGroupObj ? selectedGroupObj.description : "",
+      comments: "",
     };
- 
+
     const url = isBlank
       ? `${API_BASE_URL}/workouts`
       : `${API_BASE_URL}/workout-creation/${selectedGroup}`;
 
     fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(workoutData)
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(workoutData),
     })
-      .then(res => {
-        if (!res.ok) throw new Error('Failed to create workout');
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to create workout");
         return res.json();
       })
-      .then(data => {
-        alert('Workout created successfully');
+      .then((data) => {
+        alert("Workout created successfully");
         window.location.href = `/workout-view/${data.id}`;
       })
-      .catch(err => {
-        console.error('Error creating workout:', err);
-        alert('Error creating workout');
+      .catch((err) => {
+        console.error("Error creating workout:", err);
+        alert("Error creating workout");
       });
   };
 
@@ -63,7 +66,7 @@ const WorkoutCreator = () => {
           className="form-control"
           id="workoutDate"
           value={workoutDate}
-          onChange={e => setWorkoutDate(e.target.value)}
+          onChange={(e) => setWorkoutDate(e.target.value)}
         />
       </div>
 
@@ -73,10 +76,10 @@ const WorkoutCreator = () => {
           id="muscleGroupSelect"
           className="form-control"
           value={selectedGroup}
-          onChange={e => setSelectedGroup(e.target.value)}
+          onChange={(e) => setSelectedGroup(e.target.value)}
         >
           <option value="">-- Select --</option>
-          {muscleGroups.map(group => (
+          {muscleGroups.map((group) => (
             <option key={group.id} value={group.id}>
               {group.description}
             </option>
@@ -90,7 +93,7 @@ const WorkoutCreator = () => {
           className="form-check-input"
           id="blankCheck"
           checked={isBlank}
-          onChange={e => setIsBlank(e.target.checked)}
+          onChange={(e) => setIsBlank(e.target.checked)}
         />
         <label className="form-check-label" htmlFor="blankCheck">
           Blank
