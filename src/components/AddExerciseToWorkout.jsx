@@ -9,6 +9,8 @@ const AddExerciseToWorkout = ({
 }) => {
   const [muscleGroups, setMuscleGroups] = useState([]);
   const [selectedGroupId, setSelectedGroupId] = useState(initialGroupId);
+  const [muscles, setMuscles] = useState([]);
+  const [selectedMuscleId, setSelectedMuscleId] = useState("");
   const [equipmentList, setEquipmentList] = useState([]);
   const [equipment_id, setEquipmentId] = useState("");
   const [options, setOptions] = useState("");
@@ -29,25 +31,69 @@ const AddExerciseToWorkout = ({
     fetchMuscleGroups();
   }, []);
 
-  // Fetch equipment when selected muscle group changes
+  // Fetch muscles when selected muscle group changes
   useEffect(() => {
-    const fetchEquipment = async () => {
+    const fetchMuscles = async () => {
+      if (!selectedGroupId) {
+        setMuscles([]);
+        setSelectedMuscleId("");
+        return;
+      }
+
       try {
-        const response = await fetch(`${API_BASE_URL}/equipment`);
-        const data = await response.json();
-        const filtered = data.filter(
-          (eq) => eq.muscle_group_id === selectedGroupId
+        const res = await fetch(
+          `${API_BASE_URL}/muscles-by-group/${selectedGroupId}`
         );
-        setEquipmentList(filtered);
-        setEquipmentId(""); // reset selection when group changes
-      } catch (error) {
-        console.error("Failed to fetch equipment", error);
+        const data = await res.json();
+        setMuscles(data);
+        setSelectedMuscleId(""); // reset muscle selection when group changes
+      } catch (err) {
+        console.error("Failed to fetch muscles", err);
+        setMuscles([]);
       }
     };
-    if (selectedGroupId) {
-      fetchEquipment();
-    }
+    fetchMuscles();
   }, [selectedGroupId]);
+
+  // Fetch equipment when selected muscle group or muscle changes
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      if (!selectedGroupId) {
+        setEquipmentList([]);
+        setEquipmentId("");
+        return;
+      }
+
+      try {
+        let url = `${API_BASE_URL}/equipment`;
+
+        // If a muscle is selected, filter by main muscle
+        if (selectedMuscleId) {
+          url += `?muscle_group_id=${selectedGroupId}&main_muscle_id=${selectedMuscleId}`;
+        } else {
+          // Otherwise, just filter by muscle group
+          const response = await fetch(`${API_BASE_URL}/equipment`);
+          const data = await response.json();
+          const filtered = data.filter(
+            (eq) => eq.muscle_group_id === selectedGroupId
+          );
+          setEquipmentList(filtered);
+          setEquipmentId(""); // reset selection when filters change
+          return;
+        }
+
+        const response = await fetch(url);
+        const data = await response.json();
+        setEquipmentList(data);
+        setEquipmentId(""); // reset selection when filters change
+      } catch (error) {
+        console.error("Failed to fetch equipment", error);
+        setEquipmentList([]);
+      }
+    };
+
+    fetchEquipment();
+  }, [selectedGroupId, selectedMuscleId]);
 
   const getEquipmentStatsComment = async (equipment_id) => {
     try {
@@ -62,7 +108,7 @@ const AddExerciseToWorkout = ({
         comment += `Max: ${stats.max_weight}\n `;
       }
       if (Array.isArray(stats.last_reps) && stats.last_reps.length > 0) {
-        comment += `${stats.last}\n `
+        comment += `${stats.last}\n `;
         comment += stats.last_reps
           .map(
             (rep) =>
@@ -100,7 +146,7 @@ const AddExerciseToWorkout = ({
           workout_id,
           equipment_id: parseInt(equipment_id),
           options,
-          order: nextOrder
+          order: nextOrder,
         }),
       });
 
@@ -111,6 +157,7 @@ const AddExerciseToWorkout = ({
       alert(stats);
       setOptions("");
       setEquipmentId("");
+      setSelectedMuscleId(""); // Reset muscle selection after successful addition
       if (onAdded) onAdded(result);
     } catch (err) {
       console.error(err);
@@ -128,12 +175,32 @@ const AddExerciseToWorkout = ({
         <select
           className="form-select"
           value={selectedGroupId}
-          onChange={(e) => setSelectedGroupId(parseInt(e.target.value))}
+          onChange={(e) => {
+            setSelectedGroupId(parseInt(e.target.value));
+            setSelectedMuscleId(""); // Reset muscle selection when group changes
+          }}
         >
           <option value="">Select muscle group</option>
           {muscleGroups.map((group) => (
             <option key={group.id} value={group.id}>
               {group.description}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="mb-2">
+        <label className="form-label">Muscle (optional)</label>
+        <select
+          className="form-select"
+          value={selectedMuscleId}
+          onChange={(e) =>
+            setSelectedMuscleId(e.target.value ? parseInt(e.target.value) : "")
+          }
+        >
+          <option value="">All muscles in group</option>
+          {muscles.map((muscle) => (
+            <option key={muscle.id} value={muscle.id}>
+              {muscle.description}
             </option>
           ))}
         </select>
